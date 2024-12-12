@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "electronic-control-fesb",
+    "dev": "electronic-control-fesb"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
+}

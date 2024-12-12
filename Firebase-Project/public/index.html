@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="#">
+  <title>ESP32 Firebase App</title>
+
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+  <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+
+  <!-- Include Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Include date adapter for Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+
+  <!-- Chart.js Zoom Plugin from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.0/dist/chartjs-plugin-zoom.min.js"></script>
+
+  <!-- include to use jquery-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <!-- Highcharts JS -->
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <script type="text/javascript">
+    emailjs.init('Type your own API')
+  </script>
+
+  <!-- Link to custom CSS file -->
+  <link rel="stylesheet" href="styles.css">
+
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "", //Type your own API key
+      authDomain: "electronic-control-fesb.firebaseapp.com",
+      databaseURL: "https://electronic-control-fesb-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "electronic-control-fesb",
+      storageBucket: "",
+      messagingSenderId: "", //Type your own ID
+      appId: "" //Type your own ID
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth(); 
+  </script>
+
+
+</head>
+
+<body class="min-vh-100 d-flex flex-column justify-content-between">
+
+  <!--NAVBAR-->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container d-flex justify-content-between">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">
+          <strong>ESP Firebase App 🔥</strong>
+        </a>
+      </div>
+      <div class="navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="login-link">
+              <button id="loginBtn" class="btn btn-secondary" data-bs-toggle="modal"
+                data-bs-target="#login-modal">Login</button>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="logout-link" style="display: none;">
+              <button id="logoutBtn" class="btn btn-secondary navbar-btn" data-bs-toggle="modal"
+                data-bs-target="#logout-modal">Logout</button>
+            </a>
+          </li>
+        </ul>
+        <span class="navbar-text" id="user-details" style="display: none;">
+          User details
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal fade" id="login-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Login</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Insert your email and password to login.</p>
+          <form id="login-form">
+            <div class="mb-3">
+              <label for="inputEmail" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="input-email">
+            </div>
+            <div class="mb-3">
+              <label for="inputPassword" class="form-label">Password</label>
+              <input type="password" class="form-control" id="input-password">
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGOUT MODAL -->
+  <div class="modal fade" id="logout-modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Logout</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to logout?</p>
+        </div>
+        <div class="modal-footer">
+          <button id="logout" type="button" class="btn btn-primary" data-bs-dismiss="modal"
+            aria-label="Close">Logout</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content if user is logged out -->
+  <div id="signedOutMessage" class="text-center" style="display: none;">You are logged out or user doesn't have
+    permissions.</div>
+
+  <!-- Content if user is logged in -->
+  <div class="container mt-4 mb-4" id="dashboardSignedIn" style="display: none;">
+    <div class="card">
+      <div class="card-body">
+
+        <!-- Container for latest update -->
+        <div class="row mb-3 justify-content-center"> <!-- Add justify-content-center -->
+          <div class="col-mb-3 text-center">
+            <!-- Latest update -->
+            <div class="card">
+              <div class="card-header">
+                <h4>Latest Update</h4>
+              </div>
+              <p id="last-update" class="m-2 jus"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- <h1 class="card-title">ESP32 Firebase Web App</h1> -->
+
+        <div class="mb-3">
+          <i class="fas fa-radiation card-icon"></i>
+          <p>CO concentration: <span id="reading-CO"></span> PPM</p>
+        </div>
+
+        <div class="mb-3">
+          <i class="fas fa-fire-alt card-icon"></i>
+          <p>CH4 concentration: <span id="reading-CH4"></span> PPM</p>
+        </div>
+
+        <div class="mb-3">
+          <i class="fas fa-car-battery card-icon"></i>
+          <p>Voltage Battery: <span id="reading-battery"></span> V</p>
+        </div>
+
+        <div class="mb-3">
+          <i class="fas fa-cogs card-icon"></i>
+          <p>Voltage Pump: <span id="reading-pump"></span> V</p>
+        </div>
+
+        <div class="mb-3">
+          <i class='fas fa-exclamation-triangle' style='font-size:36px;color:rgb(8, 97, 251)'></i>
+          <p>Alarm: <span id="reading-alarm"></span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <canvas id="gasChart" width="400" height="200"></canvas>
+    </div>
+
+    <div class="mb-3">
+      <div class="col-sm mb-3 text-center">
+        <button id="resetZoomButton">Reset Zoom</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!--Container for charts-->
+  <div class="container" id="charts-container">
+    <!-- Battery Chart-->
+    <div class="row mb-3">
+      <div class="col-12 text-center">
+        <div class="card">
+          <h5 class="card-header">Voltage Battery Chart</h5>
+          <div class="card-body">
+            <div id="chart-battery" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pump Chart-->
+    <div class="row mb-3">
+      <div class="col-12 text-center">
+        <div class="card">
+          <h5 class="card-header">Voltage Pump Chart</h5>
+          <div class="card-body">
+            <div id="chart-pump" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alarm Chart-->
+    <div class="row mb-3">
+      <div class="col-12 text-center">
+        <div class="card">
+          <h5 class="card-header">Alarm Chart</h5>
+          <div class="card-body">
+            <div id="chart-alarm" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CO Chart-->
+    <div class="row mb-3">
+      <div class="col-12 text-center">
+        <div class="card">
+          <h5 class="card-header">CO Chart</h5>
+          <div class="card-body">
+            <div id="chart-co" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CH4 Chart-->
+    <div class="row mb-3">
+      <div class="col-12 text-center">
+        <div class="card">
+          <h5 class="card-header">CH4 Chart</h5>
+          <div class="card-body">
+            <div id="chart-ch4" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!--Container for buttons to handle data-->
+  <div class="row mb-3" id="graph-options" style="display: none;">
+    <div class="col-sm mb-3 text-center">
+      <button id="view-data-button" class="btn btn-primary btn-sm">View all data</button>
+      <button id="hide-data-button" class="btn btn-secondary btn-sm" style="display: none;">Hide data</button>
+      <button id="delete-data-button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+        data-bs-target="#delete-data-modal">Delete data</button>
+    </div>
+  </div>
+
+  <!--Container for table with logs of sensor readings-->
+  <div class="row mb-3" id="table-container">
+    <div class="col-mb-3 text-center">
+      <!-- Table with Sensor Readings -->
+      <div class="card">
+        <table class="table table-striped">
+          <thead>
+            <tr id="theader">
+              <th scope="col">Timestamp</th>
+              <th scope="col">Battery %</th>
+              <th scope="col">Pump %</th>
+              <th scope="col">Alarm </th>
+              <th scope="col">CO ppm</th>
+              <th scope="col">CH4 ppm </th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+          </tbody>
+        </table>
+        <!--Button to load more data-->
+        <button id="load-data" class="btn btn-lg btn-block btn-success">More results...</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Data Modal -->
+  <div class="modal fade" id="delete-data-modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Data</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete all data?</p>
+        </div>
+        <div class="modal-footer">
+          <button id="delete-data" type="button" class="btn btn-danger" data-bs-dismiss="modal"
+            aria-label="Close">Delete</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="container footer navbar-fixed-bottom bg-light">
+    <footer class=" text-center text-lg-start"></footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
+    crossorigin="anonymous"></script>
+
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+  <script src="charts-definition.js"></script>
+</body>
+
+
+</html>

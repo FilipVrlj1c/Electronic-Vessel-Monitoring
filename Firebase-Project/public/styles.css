@@ -1,0 +1,75 @@
+body {
+    background-color: #3c2c63;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center items horizontally */
+    justify-content: center;
+    /* Center items vertically */
+    min-height: 100vh;
+    /* Ensure full viewport height */
+}
+
+.container {
+    max-width: 800px;
+    /* Max width for the card */
+    width: 100%;
+    margin: 20px auto;
+    /* Center container and add margin */
+}
+
+.card {
+    width: 100%;
+    margin-bottom: 20px;
+    /* Space below the card */
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(180, 6, 214, 0.436);
+    background-color: floralwhite;
+}
+
+.card-icon {
+    font-size: 3rem;
+    color: #007bff;
+}
+
+.card-body {
+    text-align: center;
+    color: brown;
+}
+
+/* Styles for chart container */
+.chart-container {
+    width: 80%;
+    /* Adjust width as needed */
+    max-width: 800px;
+    /* Limit the maximum width */
+    height: 400px;
+    /* Adjust height as needed */
+    background-color: #fff;
+    margin: 20px auto;
+    /* Center and add margin */
+    padding: 20px;
+    border-radius: 10px;
+    /* Optional: Add border radius for rounded corners */
+    box-shadow: 0 4px 8px rgba(180, 6, 214, 0.436);
+    /* Optional: Add shadow */
+    display: flex;
+    justify-content: center;
+    /* Center horizontally */
+    align-items: center;
+    /* Center vertically */
+}
+
+/* Ensure canvas takes full width and height of its container */
+#gasChart {
+    width: 800px;
+    height: 500px;
+    background-color: aliceblue;
+}
+
+#signedOutMessage {
+    color: azure;
+}
